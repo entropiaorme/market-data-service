@@ -41,8 +41,9 @@ profit-and-loss figures.
 
 | Path | Contents |
 | --- | --- |
-| `terraform/` | All infrastructure as code; no console-created resources. The runbook is [`terraform/README.md`](terraform/README.md); `bootstrap/` stands up the Terraform state backend and the cost guardrails first. |
-| `schemas/` | Versioned JSON Schemas for submissions and published snapshots, with an explicit compatibility policy (documented alongside the schemas). |
+| `terraform/` | All infrastructure as code; no console-created resources. The runbook is [`terraform/README.md`](terraform/README.md); `bootstrap/` stands up the Terraform state backend and the cost guardrails first, `main/` is the service itself. |
+| `schemas/` | Versioned JSON Schemas for submissions and published snapshots, with an explicit compatibility policy (documented alongside the schemas). Published copies are served under `/schemas/` on the service domain, matching each schema's `$id`. |
+| `lambdas/` | The Rust workspace behind the pipeline: `contracts` (shared types; validates against the embedded schemas), `ingest` (auth, validation, idempotent writes), `aggregate` (fold, validate, atomic publish). Built with cargo-lambda for arm64. |
 
 ## Operating principles
 
