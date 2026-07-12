@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "The home region for the service (CloudFront is global; everything else lives here)."
   type        = string
-  default     = "eu-west-1"
+  default     = "eu-north-1"
 }
 
 variable "state_bucket_name" {
