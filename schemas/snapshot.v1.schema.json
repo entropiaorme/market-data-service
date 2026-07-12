@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://market-data.entropiaorme.com/schemas/snapshot.v1.schema.json",
+  "title": "Published market snapshot (v1)",
+  "description": "One published aggregate snapshot: every item's latest aggregated readings, written immutably by the scheduled aggregation and served to all clients behind an atomically-updated latest pointer. Compatibility policy: additive optional fields may join v1; anything else mints v2.",
+  "type": "object",
+  "required": ["schemaVersion", "generatedAt", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the aggregation produced this snapshot (UTC). Clients surface staleness from this."
+    },
+    "contributorCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many distinct contributors fed the aggregation window."
+    },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/itemAggregate" }
+    }
+  },
+  "$defs": {
+    "itemAggregate": {
+      "type": "object",
+      "required": ["itemName", "tier", "observedAt", "readings"],
+      "additionalProperties": false,
+      "properties": {
+        "itemName": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "tier": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The newest underlying observation for this item (UTC)."
+        },
+        "readings": {
+          "type": "object",
+          "required": ["day", "week", "month", "year", "decade"],
+          "additionalProperties": false,
+          "properties": {
+            "day": { "$ref": "#/$defs/reading" },
+            "week": { "$ref": "#/$defs/reading" },
+            "month": { "$ref": "#/$defs/reading" },
+            "year": { "$ref": "#/$defs/reading" },
+            "decade": { "$ref": "#/$defs/reading" }
+          }
+        }
+      }
+    },
+    "reading": {
+      "type": "object",
+      "required": ["markupPct", "salesPed"],
+      "additionalProperties": false,
+      "properties": {
+        "markupPct": { "type": ["number", "null"], "minimum": 0, "maximum": 100000 },
+        "salesPed": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}
