@@ -48,7 +48,6 @@ data "aws_iam_policy_document" "ingest" {
     sid = "ContributorLookupAndObservationWrites"
     actions = [
       "dynamodb:GetItem",
-      "dynamodb:PutItem",
       "dynamodb:BatchWriteItem",
     ]
     resources = [aws_dynamodb_table.observations.arn]
