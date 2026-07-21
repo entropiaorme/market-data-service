@@ -52,6 +52,25 @@ resource "aws_s3_bucket_policy" "snapshots" {
   policy = data.aws_iam_policy_document.snapshots_cloudfront_read.json
 }
 
+# The app's webview reads the snapshot cross-origin, and its conditional
+# refresh sends If-None-Match, which is not a CORS-safelisted header, so
+# the browser preflights the GET. S3 answers both once the bucket carries
+# a CORS configuration and CloudFront forwards the CORS request headers
+# (see the default cache behaviour). ETag is exposed so the client can
+# replay it as If-None-Match. The data is public; the wildcard origin is
+# deliberate.
+resource "aws_s3_bucket_cors_configuration" "snapshots" {
+  bucket = aws_s3_bucket.snapshots.id
+
+  cors_rule {
+    allowed_origins = ["*"]
+    allowed_methods = ["GET", "HEAD"]
+    allowed_headers = ["*"]
+    expose_headers  = ["ETag"]
+    max_age_seconds = 3600
+  }
+}
+
 # The contract schemas are published at the URLs their $id fields declare.
 resource "aws_s3_object" "schemas" {
   for_each = fileset("${path.module}/../../schemas", "*.schema.json")
@@ -94,6 +113,7 @@ locals {
   cache_policy_caching_optimized       = "658327ea-f89d-4fab-a63d-7e88639e58f6"
   cache_policy_caching_disabled        = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
   origin_policy_all_viewer_except_host = "b689b0a8-53d0-40ab-baf2-68738e2966ac"
+  origin_policy_cors_s3                = "88a5eaf4-2fd4-4709-b370-b4c650ea3fcf"
 }
 
 resource "aws_cloudfront_distribution" "market_data" {
@@ -124,14 +144,20 @@ resource "aws_cloudfront_distribution" "market_data" {
 
   # Snapshots and schemas: cached GETs against S3. Object Cache-Control
   # headers set by the aggregation govern freshness (immutable snapshot
-  # objects, five-minute latest pointer).
+  # objects, five-minute latest pointer). OPTIONS rides along so the
+  # webview's CORS preflight (triggered by If-None-Match) reaches the
+  # bucket's CORS responder; the CORS-S3Origin policy forwards Origin
+  # and the Access-Control-Request-* headers. Caching stays safe with
+  # Origin outside the cache key because the bucket answers wildcard
+  # (the response never varies by origin).
   default_cache_behavior {
-    target_origin_id       = local.s3_origin_id
-    allowed_methods        = ["GET", "HEAD"]
-    cached_methods         = ["GET", "HEAD"]
-    cache_policy_id        = local.cache_policy_caching_optimized
-    viewer_protocol_policy = "redirect-to-https"
-    compress               = true
+    target_origin_id         = local.s3_origin_id
+    allowed_methods          = ["GET", "HEAD", "OPTIONS"]
+    cached_methods           = ["GET", "HEAD", "OPTIONS"]
+    cache_policy_id          = local.cache_policy_caching_optimized
+    origin_request_policy_id = local.origin_policy_cors_s3
+    viewer_protocol_policy   = "redirect-to-https"
+    compress                 = true
   }
 
   # Submissions: pass through to the ingest API uncached.

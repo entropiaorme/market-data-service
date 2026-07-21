@@ -6,6 +6,21 @@
 resource "aws_apigatewayv2_api" "ingest" {
   name          = "entropiaorme-market-data"
   protocol_type = "HTTP"
+
+  # The app's webview calls this API cross-origin, so the browser
+  # preflights the authenticated POST; without CORS configured the
+  # preflight 404s and the submission never leaves the client. CORS is
+  # presentation here, not a security boundary: authentication is the
+  # bearer token, no cookies or ambient credentials exist, and the
+  # wildcard origin keeps every webview platform (WebKitGTK, WebView2,
+  # the dev server) working without origin guessing. With this block
+  # the HTTP API answers the OPTIONS preflight itself; no route needed.
+  cors_configuration {
+    allow_origins = ["*"]
+    allow_methods = ["POST"]
+    allow_headers = ["authorization", "content-type"]
+    max_age       = 3600
+  }
 }
 
 resource "aws_apigatewayv2_integration" "ingest" {
