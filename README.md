@@ -5,10 +5,14 @@ a small AWS serverless pipeline that receives per-item markup observations from
 authenticated clients, aggregates them on a schedule, and publishes versioned
 snapshot files that every installation of the app can consume.
 
-**Status: pre-production.** The pipeline is being built and is not yet serving
-traffic. The design is contributor-agnostic from the first commit: the same
-authenticated ingest path serves one contributor or many, and aggregation and
-outlier handling are designed for N contributors even while N is small.
+**Status: retired.** The service ran from July to October 2026 and has been
+torn down: every AWS resource it created is destroyed, and the app now keeps
+market observations in its own local store. The repository stays as a
+reference for the design; the Terraform here is configured so a fresh
+deployment can also be destroyed cleanly. The design was contributor-agnostic
+from the first commit: the same authenticated ingest path served one
+contributor or many, and aggregation and outlier handling were designed for N
+contributors even while N was small.
 
 ## The pipeline
 

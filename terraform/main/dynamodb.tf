@@ -31,5 +31,5 @@ resource "aws_dynamodb_table" "observations" {
     enabled        = true
   }
 
-  deletion_protection_enabled = true
+  deletion_protection_enabled = false
 }

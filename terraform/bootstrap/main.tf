@@ -36,11 +36,8 @@ provider "aws" {
 # ── Terraform state backend ─────────────────────────────────────────
 
 resource "aws_s3_bucket" "tf_state" {
-  bucket = var.state_bucket_name
-
-  lifecycle {
-    prevent_destroy = true
-  }
+  bucket        = var.state_bucket_name
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "tf_state" {

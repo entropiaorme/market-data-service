@@ -4,11 +4,8 @@
 # second apply once the ACM certificate validates; see var.domain_ready.
 
 resource "aws_s3_bucket" "snapshots" {
-  bucket = var.snapshot_bucket_name
-
-  lifecycle {
-    prevent_destroy = true
-  }
+  bucket        = var.snapshot_bucket_name
+  force_destroy = true
 }
 
 resource "aws_s3_bucket_versioning" "snapshots" {
